@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ACO": {
+      "commandName": "Project",
+      "commandLineArgs": "entrada2.txt"
+    }
+  }
+}
