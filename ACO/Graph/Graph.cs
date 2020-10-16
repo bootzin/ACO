@@ -6,7 +6,8 @@ namespace ACO
 {
     public class Graph
     {
-        public List<Edge> Edges { get; set; } = new List<Edge>();
+		public int VerticesCount { get; set; }
+		public List<Edge> Edges { get; set; } = new List<Edge>();
         public MemoryCache Cache { get; set; }
         public double MinPheromone { get; set; }
 
@@ -15,16 +16,16 @@ namespace ACO
             Cache = new MemoryCache(new MemoryCacheOptions());
         }
 
-        public void AddEdge(Edge edge)
+        public void AddEdge(Edge edge, int it)
         {
-            Cache.CreateEntry(edge.StartId + "_" + edge.EndId);
-            Cache.Set(edge.StartId + "_" + edge.EndId, edge);
+            Cache.CreateEntry(edge.StartId + "_" + edge.EndId + "_" + it);
+            Cache.Set(edge.StartId + "_" + edge.EndId + "_" + it, edge);
             Edges.Add(edge);
         }
 
-        public Edge GetEdge(int startId, int endId)
+        public Edge GetEdge(int startId, int endId, int it)
         {
-            Cache.TryGetValue(startId + "_" + endId, out Edge result);
+            Cache.TryGetValue(startId + "_" + endId + "_" + it, out Edge result);
             return result;
         }
 

@@ -23,7 +23,7 @@ namespace ACO
             Results = new List<double>();
         }
 
-        public void Run()
+        public void Run(int runN)
         {
             Stopwatch.Restart();
             Results.Clear();
@@ -34,25 +34,25 @@ namespace ACO
                 List<Ant> ants = CreateAnts();
                 GlobalBestAnt ??= ants[0];
 
-                Ant bestAnt = BuildSolutions(ants);
+                Ant bestAnt = BuildSolutions(ants, runN);
 
                 if (bestAnt.Distance > GlobalBestAnt.Distance)
                 {
                     GlobalBestAnt = bestAnt;
-                    Console.WriteLine("Best ant updated with distance " + bestAnt.Distance + " on iteration " + it);
+                    Console.WriteLine("Best ant updated with distance " + bestAnt.Distance + " on iteration " + it + " of run # " + runN);
                 }
                 Results.Add(bestAnt.Distance);
             }
             Stopwatch.Stop();
         }
 
-        private Ant BuildSolutions(List<Ant> ants)
+        private Ant BuildSolutions(List<Ant> ants, int it)
         {
-            for (int i = 0; i < Graph.Edges.Select(e => e.StartId).Distinct().Count(); i++)
+            for (int i = 0; i < Graph.VerticesCount; i++)
             {
                 foreach (Ant ant in ants)
                 {
-                    Edge edge = ant.Move();
+                    Edge edge = ant.Move(it);
                     if (edge != null)
                         LocalUpdate(edge);
                 }
@@ -90,9 +90,12 @@ namespace ACO
             List<Ant> ants = new List<Ant>();
             for (int i = 0; i < Parameters.AntCount; i++)
             {
-                int rand = Utils.Random.Next(1, Graph.Edges.Select(e => e.StartId).Distinct().Count() + 1);
-                Ant ant = new Ant(Graph, Parameters.Beta, Parameters.Q0, rand);
-                ants.Add(ant);
+                lock (Utils.Random)
+				{
+                    int rand = Utils.Random.Next(1, Graph.VerticesCount + 1);
+                    Ant ant = new Ant(Graph, Parameters.Beta, Parameters.Q0, rand);
+                    ants.Add(ant);
+				}
             }
             return ants;
         }

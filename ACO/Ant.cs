@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ACO
 {
-    public class Ant
+	public class Ant
     {
-        private Graph Graph;
-        private int Beta;
-        private double Q0;
-        private int StartNodeId;
+        private readonly Graph Graph;
+        private readonly int Beta;
+        private readonly double Q0;
 
         public List<int> VisitedNodes { get; }
         public List<int> UnvisitedNodes { get; }
@@ -22,7 +19,6 @@ namespace ACO
             Graph = graph;
             Beta = beta;
             Q0 = q0;
-            StartNodeId = rand;
             Distance = 0d;
 
             VisitedNodes = new List<int> { rand };
@@ -34,7 +30,7 @@ namespace ACO
         public int CurrentNode => VisitedNodes[^1];
         public bool CanMove { get; set; } = true;
 
-        public Edge Move()
+        public Edge Move(int it)
         {
             Edge edge = null;
             if (CanMove)
@@ -48,7 +44,7 @@ namespace ACO
                 }
                 else
                 {
-                    end = ChooseNode();
+                    end = ChooseNode(it);
                     if (end == -1)
                     {
                         CanMove = false;
@@ -58,21 +54,21 @@ namespace ACO
                     UnvisitedNodes.Remove(end);
                 }
 
-                edge = Graph.GetEdge(start, end);
+                edge = Graph.GetEdge(start, end, it);
                 Path.Add(edge);
                 Distance += edge.Length;
             }
             return edge;
         }
 
-        private int ChooseNode()
+        private int ChooseNode(int it)
         {
             List<Edge> edgesWithWeight = new List<Edge>();
             Edge bestEdge = new Edge();
 
             foreach (int node in UnvisitedNodes)
             {
-                Edge edge = Graph.GetEdge(CurrentNode, node);
+                Edge edge = Graph.GetEdge(CurrentNode, node, it);
                 if (edge == null)
                     continue;
                 edge.Weight = Eval(edge);
@@ -90,7 +86,10 @@ namespace ACO
                 return -1;
             }
 
-            if (Utils.Random.NextDouble() > Q0)
+            double rand;
+            lock (Utils.Random)
+                rand = Utils.Random.NextDouble();
+            if (rand > Q0)
                 return Exploit(bestEdge);
             return Explore(edgesWithWeight);
         }
@@ -109,7 +108,10 @@ namespace ACO
                 sum += e.Weight;
                 e.Weight = sum;
             }
-            return edgeProbabilities.First(e => e.Weight >= Utils.Random.NextDouble()).EndId;
+            double rand;
+            lock (Utils.Random)
+                rand = Utils.Random.NextDouble();
+            return edgeProbabilities.First(e => e.Weight >= rand).EndId;
         }
 
         private int Exploit(Edge bestEdge)
